@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  jmeter:
+    image: justb4/jmeter:latest
+    volumes:
+      - ./jmeter:/jmeter
+    command: -n -t /jmeter/test.jmx -l /jmeter/results.jtl -e -o /jmeter/dashboard
+    ports:
+      - "1099:1099"
+      - "60000:60000"
+    networks:
+      - jmeter_network
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/data:/prometheus
+    command: --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - jmeter_network
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:3000"
+    networks:
+      - jmeter_network
+
+networks:
+  jmeter_network:
